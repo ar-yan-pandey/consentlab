@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export',
+  distDir: '.next',  // This is the default, can be removed
   images: {
-    domains: ['localhost'],
-  },
-};
+    unoptimized: true,
+  }
+  // Remove the module.exports line
+}
 
-export default nextConfig;
+export default nextConfig
