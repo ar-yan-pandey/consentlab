@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, Eye, Edit, Trash2, QrCode, Copy, FileText } from 'lucide-react';
+import { Search, Eye, Edit, Trash2, QrCode, Copy, FileText, LogOut } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
@@ -12,6 +12,7 @@ import QRCode from 'react-qr-code';
 import { toast } from '@/components/ui/Toast';
 import PatientDetailsModal from './PatientDetailsModal';
 import EditPatientModal from './EditPatientModal';
+import DischargePatientModal from './DischargePatientModal';
 
 interface Patient {
   id: string;
@@ -21,7 +22,9 @@ interface Patient {
   gender: string;
   disease: string;
   doctor_assigned: string;
+  treatment_course: string;
   admission_date: string;
+  discharge_status?: string;
 }
 
 interface PatientListProps {
@@ -38,6 +41,8 @@ export default function PatientList({ onRefresh }: PatientListProps) {
   const [showQR, setShowQR] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState<Patient | null>(null);
   const [showEdit, setShowEdit] = useState<Patient | null>(null);
+  const [showDischarge, setShowDischarge] = useState<Patient | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadPatients();
@@ -74,6 +79,23 @@ export default function PatientList({ onRefresh }: PatientListProps) {
       if (error) throw error;
       setPatients(data || []);
       setFilteredPatients(data || []);
+
+      // Fetch payment status for each patient
+      if (data && data.length > 0) {
+        const patientIds = data.map(p => p.patient_id);
+        const { data: bills } = await supabase
+          .from('discharge_bills')
+          .select('patient_id, payment_status')
+          .in('patient_id', patientIds);
+
+        if (bills) {
+          const statusMap: Record<string, string> = {};
+          bills.forEach(bill => {
+            statusMap[bill.patient_id] = bill.payment_status;
+          });
+          setPaymentStatus(statusMap);
+        }
+      }
     } catch (error) {
       console.error('Error loading patients:', error);
     } finally {
@@ -159,6 +181,9 @@ export default function PatientList({ onRefresh }: PatientListProps) {
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
                   Admission
                 </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">
+                  Status
+                </th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900">
                   Actions
                 </th>
@@ -186,6 +211,35 @@ export default function PatientList({ onRefresh }: PatientListProps) {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {formatDate(patient.admission_date)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1">
+                      {patient.discharge_status === 'discharged' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">
+                          Discharged
+                        </span>
+                      )}
+                      {patient.discharge_status === 'ready_for_discharge' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                          Ready for Discharge
+                        </span>
+                      )}
+                      {paymentStatus[patient.patient_id] === 'paid' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                          ✓ Paid
+                        </span>
+                      )}
+                      {paymentStatus[patient.patient_id] === 'pending' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                          Payment Pending
+                        </span>
+                      )}
+                      {!patient.discharge_status && !paymentStatus[patient.patient_id] && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                          Admitted
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
@@ -216,6 +270,13 @@ export default function PatientList({ onRefresh }: PatientListProps) {
                         title="Edit"
                       >
                         <Edit className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <button
+                        onClick={() => setShowDischarge(patient)}
+                        className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                        title="Discharge Patient"
+                      >
+                        <LogOut className="w-4 h-4 text-emerald-600" />
                       </button>
                       <button
                         onClick={() => handleDelete(patient.id)}
@@ -269,6 +330,19 @@ export default function PatientList({ onRefresh }: PatientListProps) {
           onClose={() => setShowEdit(null)}
           onSuccess={() => {
             setShowEdit(null);
+            loadPatients();
+            onRefresh?.();
+          }}
+        />
+      )}
+
+      {/* Discharge Patient Modal */}
+      {showDischarge && (
+        <DischargePatientModal
+          patient={showDischarge}
+          onClose={() => setShowDischarge(null)}
+          onSuccess={() => {
+            setShowDischarge(null);
             loadPatients();
             onRefresh?.();
           }}

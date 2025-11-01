@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowLeft, QrCode, Loader2, User, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, QrCode, Loader2, User, Calendar, FileText, LogOut, CreditCard } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/components/ui/Toast';
 import ConsentViewer from './ConsentViewer';
+import DischargeView from './DischargeView';
 import { formatDate } from '@/lib/utils';
 
 interface ConnectHospitalProps {
@@ -21,6 +22,8 @@ export default function ConnectHospital({ onBack }: ConnectHospitalProps) {
   const [consentForms, setConsentForms] = useState<any[]>([]);
   const [selectedConsent, setSelectedConsent] = useState<any>(null);
   const [showScanner, setShowScanner] = useState(false);
+  const [showDischarge, setShowDischarge] = useState(false);
+  const [hasDischarge, setHasDischarge] = useState(false);
 
   const handleConnect = async () => {
     if (!patientId.trim()) {
@@ -50,6 +53,15 @@ export default function ConnectHospital({ onBack }: ConnectHospitalProps) {
 
       setPatientData(patient);
       setConsentForms(consents || []);
+
+      // Check if patient has discharge summary
+      const { data: discharge } = await supabase
+        .from('discharge_summaries')
+        .select('id')
+        .eq('patient_id', patientId.toUpperCase())
+        .limit(1);
+
+      setHasDischarge(!!(discharge && discharge.length > 0));
     } catch (error) {
       console.error('Error fetching patient data:', error);
       toast('error', 'Failed to connect to hospital. Please try again.');
@@ -79,10 +91,38 @@ export default function ConnectHospital({ onBack }: ConnectHospitalProps) {
     );
   }
 
+  if (showDischarge && patientData) {
+    return (
+      <div className="min-h-screen bg-medical-gradient">
+        <div className="fixed inset-0 bg-medical-pattern opacity-40 pointer-events-none" />
+        <header className="relative bg-white/80 backdrop-blur-md shadow-medical border-b border-emerald-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={() => setShowDischarge(false)}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Discharge Summary</h1>
+                <p className="text-gray-600">Review and complete payment</p>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <DischargeView
+            patientId={patientData.patient_id}
+            patientName={patientData.patient_name}
+          />
+        </main>
+      </div>
+    );
+  }
+
   if (patientData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-        <header className="bg-white shadow-sm">
+      <div className="min-h-screen bg-medical-gradient">
+        <div className="fixed inset-0 bg-medical-pattern opacity-40 pointer-events-none" />
+        <header className="relative bg-white/80 backdrop-blur-md shadow-medical border-b border-emerald-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center gap-4">
               <Button variant="outline" onClick={() => setPatientData(null)}>
@@ -96,7 +136,33 @@ export default function ConnectHospital({ onBack }: ConnectHospitalProps) {
           </div>
         </header>
 
-        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Discharge Alert */}
+          {hasDischarge && (
+            <div className="mb-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-3xl p-8 text-white shadow-medical-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/20 backdrop-blur-sm p-4 rounded-2xl">
+                    <LogOut className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-1">Discharge Process Ready</h3>
+                    <p className="text-emerald-50 text-lg">
+                      Your discharge summary and billing information are available
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowDischarge(true)}
+                  className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-8 py-4 text-lg shadow-lg"
+                >
+                  <CreditCard className="w-6 h-6 mr-2" />
+                  View & Pay
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Patient Information */}
           <Card className="mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Patient Information</h2>
@@ -192,8 +258,9 @@ export default function ConnectHospital({ onBack }: ConnectHospitalProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-medical-gradient">
+      <div className="fixed inset-0 bg-medical-pattern opacity-40 pointer-events-none" />
+      <header className="relative bg-white/80 backdrop-blur-md shadow-medical border-b border-emerald-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={onBack}>
@@ -207,7 +274,7 @@ export default function ConnectHospital({ onBack }: ConnectHospitalProps) {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Card>
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">

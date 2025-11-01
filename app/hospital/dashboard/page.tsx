@@ -23,6 +23,7 @@ export default function HospitalDashboard() {
   const logout = useHospitalStore((state) => state.logout);
   const router = useRouter();
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [stats, setStats] = useState({
     totalPatients: 0,
     pendingConsents: 0,
@@ -83,9 +84,10 @@ export default function HospitalDashboard() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-medical-gradient relative">
+      <div className="fixed inset-0 bg-medical-pattern opacity-40 pointer-events-none" />
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="relative bg-white/80 backdrop-blur-md shadow-medical border-b border-emerald-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -104,7 +106,7 @@ export default function HospitalDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card>
@@ -157,7 +159,7 @@ export default function HospitalDashboard() {
             </Button>
           </div>
 
-          <PatientList onRefresh={loadStats} />
+          <PatientList key={refreshKey} onRefresh={loadStats} />
         </Card>
       </main>
 
@@ -168,6 +170,7 @@ export default function HospitalDashboard() {
           onSuccess={() => {
             setShowAddPatient(false);
             loadStats();
+            setRefreshKey(prev => prev + 1);
           }}
         />
       )}
