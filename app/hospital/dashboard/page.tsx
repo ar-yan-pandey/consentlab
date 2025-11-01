@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Users,
   FileText,
@@ -90,13 +91,22 @@ export default function HospitalDashboard() {
       <header className="relative bg-white/80 backdrop-blur-md shadow-medical border-b border-emerald-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {user.hospitalName}
-              </h1>
-              <p className="text-sm text-gray-600">
-                {user.fullName} • {user.role.replace('_', ' ').toUpperCase()}
-              </p>
+            <div className="flex items-center gap-3">
+              <Image 
+                src="/logo.png" 
+                alt="ConsentLab Logo" 
+                width={40} 
+                height={40}
+                className="rounded-lg shadow-md"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {user.hospitalName}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {user.fullName} • {user.role.replace('_', ' ').toUpperCase()}
+                </p>
+              </div>
             </div>
             <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
               <LogOut className="w-4 h-4" />

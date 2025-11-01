@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Upload, Scan, Link2, FileText, Shield, Languages, Activity, Heart, Stethoscope, ClipboardCheck } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -33,9 +34,13 @@ export default function PatientHome() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-2.5 rounded-xl shadow-medical">
-                <Activity className="w-7 h-7 text-white" />
-              </div>
+              <Image 
+                src="/logo.png" 
+                alt="ConsentLab Logo" 
+                width={48} 
+                height={48}
+                className="rounded-xl shadow-medical"
+              />
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">ConsentLab</h1>
                 <p className="text-gray-600 text-sm font-medium">Understand. Trust. Consent.</p>

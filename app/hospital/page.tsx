@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Hospital, Lock, Mail, Activity, Shield, Stethoscope } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -65,9 +66,13 @@ export default function HospitalLogin() {
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-6">
-              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-3 rounded-xl shadow-medical-lg">
-                <Activity className="w-8 h-8 text-white" />
-              </div>
+              <Image 
+                src="/logo.png" 
+                alt="ConsentLab Logo" 
+                width={56} 
+                height={56}
+                className="rounded-xl shadow-medical-lg"
+              />
               <span className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">ConsentLab</span>
             </div>
           </div>
